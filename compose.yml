@@ -1,0 +1,21 @@
+services:
+  openssh-server:
+    image: lscr.io/linuxserver/openssh-server:latest
+    container_name: ${CONTAINER_NAME}
+    hostname: ${HOSTNAME}
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TIMEZONE}
+      - PUBLIC_KEY_DIR=${PUBLIC_KEY_DIR}
+      - SUDO_ACCESS=false #optional
+      - PASSWORD_ACCESS=false #optional
+      - USER_NAME=${USER_NAME} #optional
+      - LOG_STDOUT= #optional
+    volumes:
+      - ./config:/config
+      - ${MUSIC_DIR}:/music
+      - ./custom-cont-init.d:/custom-cont-init.d
+    ports:
+      - 3008:2222
+    restart: unless-stopped
