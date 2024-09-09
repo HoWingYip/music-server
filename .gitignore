@@ -1,3 +1,10 @@
-config/
 .env
+
+# Homedir of SSH server user account
+server/config/
+# Dummy private keys for testing
+server/testing_keys/
+
+# Dummy music folder for testing
+music/
 
