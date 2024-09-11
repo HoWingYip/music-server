@@ -12,14 +12,30 @@ services:
       - ./server/custom-cont-init.d:/custom-cont-init.d
       - ./music:/music
     ports:
-      - 3008:2222
+      - ${SSH_PORT}:2222
     restart: unless-stopped
 
+  ssh-tunnel:
+    build: tunnel
+    container_name: music-server-tunnel
+    env_file: .env.tunnel
+    network_mode: "service:openssh-server"
+    restart: unless-stopped
+    healthcheck:
+      test: "[ $(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].config.addr') == 'localhost:2222' ]"
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   telegram-bot:
-    image: music-server-bot:latest
+    build: telegram_bot
     container_name: music-server-bot
-    hostname: music-server-bot-host
     env_file: .env.bot
+    network_mode: "service:openssh-server"
     volumes:
       - ./music:/music
+    depends_on:
+      ssh-tunnel:
+        condition: service_healthy
     restart: unless-stopped

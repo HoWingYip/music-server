@@ -1,6 +1,7 @@
+# Variables for Docker Compose
+.env
 # Environment variables for containers
-.env.bot
-.env.server
+.env.*
 
 # Homedir of SSH server user account
 server/config/
