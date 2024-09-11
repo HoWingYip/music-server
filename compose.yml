@@ -1,6 +1,6 @@
 services:
   openssh-server:
-    image: lscr.io/linuxserver/openssh-server:latest
+    image: linuxserver/openssh-server:latest
     # TODO: remove CONTAINER_NAME and HOSTNAME from .env on actual host
     container_name: music-server
     hostname: music-server
