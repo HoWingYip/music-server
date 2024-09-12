@@ -1,8 +1,8 @@
-import re
+import logging
 from enum import Enum
+from multiprocessing import cpu_count
 from telegram import Update
-from telegram.constants import ParseMode
-from telegram.ext import filters, Application, BaseHandler, CallbackContext, CommandHandler, ContextTypes, ConversationHandler, MessageHandler
+from telegram.ext import filters, Application, CommandHandler, ContextTypes, ConversationHandler, MessageHandler
 from yt_dlp import YoutubeDL
 
 from .playlists import get_playlists
@@ -51,18 +51,45 @@ async def playlist(update: Update, context: ContextTypes.DEFAULT_TYPE):
   
   context.chat_data["add_songs"]["playlist"] = playlist_name
 
-  confirmation_message = \
-    f"The songs at the following URLs will be added to playlist '{playlist_name}':\n" + \
-    "\n".join(context.chat_data["add_songs"]["urls"]) + \
-    "\n\nTo confirm, send /confirm. To cancel, send /cancel."
-
-  await context.bot.send_message(chat_id=update.effective_chat.id, text=confirmation_message)
+  await update.message.reply_text(
+    text=f"The songs at the following URLs will be added to playlist '{playlist_name}':\n" + \
+         "\n".join(context.chat_data["add_songs"]["urls"]) + \
+         "\n\nTo confirm, send /confirm. To cancel, send /cancel.",
+    disable_web_page_preview=True,
+  )
   return AddSongsConversationState.CONFIRM
 
 async def confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
-  await update.message.reply_text("Song addition confirmed.")
-
   context.chat_data["in_conversation"] = False
+
+  playlist_name = context.chat_data["add_songs"]["playlist"]
+  song_urls = context.chat_data["add_songs"]["urls"]
+
+  download_status_message = await update.message.reply_text("Preparing to download...")
+
+  ydl_opts = {
+    "format": "bestaudio",
+    "concurrent_fragment_downloads": cpu_count(),
+    "paths": { "home": f"music/{playlist_name}" },
+    "outtmpl": "%(uploader)s - %(title)s [%(id)s].%(ext)s",
+  }
+  with YoutubeDL(ydl_opts) as ydl:
+    for i, song_url in enumerate(song_urls):
+      await download_status_message.edit_text(
+        f"Downloading {song_url} to playlist {playlist_name} ({i+1}/{len(song_urls)})",
+        disable_web_page_preview=True,
+      )
+
+      try:
+        if ydl.download(song_url) != 0:
+          raise Exception("yt-dlp returned a non-zero exit code")
+      except Exception as ex:
+        logging.error(f"Error while downloading URL {song_url}: {ex}")
+        await update.message.reply_text(
+          f"Error occurred while downloading URL {song_url}.",
+          disable_web_page_preview=True,
+        )
+
   return ConversationHandler.END
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
