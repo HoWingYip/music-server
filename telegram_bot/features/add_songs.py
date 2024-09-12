@@ -60,8 +60,7 @@ async def playlist(update: Update, context: ContextTypes.DEFAULT_TYPE):
   return AddSongsConversationState.CONFIRM
 
 async def confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
-  # await update.message.reply_text("Song addition confirmed.")
-
+  await update.message.reply_text("Song addition confirmed.")
 
   context.chat_data["in_conversation"] = False
   return ConversationHandler.END

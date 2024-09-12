@@ -30,6 +30,8 @@ async def send_start_notification():
       text=f"Bot instance started. Associated SSH server is at {tunnel_url}."
     )
 
-asyncio.run(send_start_notification())
+loop = asyncio.new_event_loop()
+loop.create_task(send_start_notification())
+loop.run_forever()
 
 application.run_polling()
