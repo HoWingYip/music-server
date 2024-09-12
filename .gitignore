@@ -1,5 +1,6 @@
 # Variables for Docker Compose
 .env
+
 # Environment variables for containers
 .env.*
 

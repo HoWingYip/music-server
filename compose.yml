@@ -4,7 +4,7 @@ services:
     # TODO: remove CONTAINER_NAME and HOSTNAME from .env on actual host
     container_name: music-server
     hostname: music-server
-    env_file: .env.server
+    env_file: server/.env.server
     volumes:
       - ./server/config:/config
       # TODO: inherit from linuxserver/openssh-server Dockerfile
@@ -18,7 +18,7 @@ services:
   ssh-tunnel:
     build: tunnel
     container_name: music-server-tunnel
-    env_file: .env.tunnel
+    env_file: tunnel/.env.tunnel
     network_mode: "service:openssh-server"
     restart: unless-stopped
     healthcheck:
@@ -31,7 +31,7 @@ services:
   telegram-bot:
     build: telegram_bot
     container_name: music-server-bot
-    env_file: .env.bot
+    env_file: telegram_bot/.env.bot
     network_mode: "service:openssh-server"
     volumes:
       - ./music:/music
