@@ -1,7 +1,6 @@
 services:
   openssh-server:
     image: linuxserver/openssh-server:latest
-    # TODO: remove CONTAINER_NAME and HOSTNAME from .env on actual host
     container_name: music-server
     hostname: music-server
     env_file: server/.env.server

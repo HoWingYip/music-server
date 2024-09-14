@@ -9,6 +9,9 @@ logging.basicConfig(
   level=logging.INFO,
 )
 
+os.makedirs("music/all_songs", exist_ok=True)
+os.makedirs("music/playlists", exist_ok=True)
+
 application = ApplicationBuilder().token(os.environ["BOT_TOKEN"]).build()
 for feature in features.__all__:
   feature.add_handlers(application)
