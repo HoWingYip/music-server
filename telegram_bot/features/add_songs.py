@@ -6,7 +6,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, ConversationHandler, MessageHandler
 from yt_dlp import YoutubeDL
 
-from .playlists import get_playlists
+from .playlists import get_playlist_dict, get_playlists
 from .utility import text_message_filter
 
 AddSongsConversationState = Enum("AddSongsConversationState", [
@@ -32,12 +32,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def urls(update: Update, context: ContextTypes.DEFAULT_TYPE):
   context.chat_data["add_songs"]["urls"] = update.message.text.split("\n")
 
-  context.chat_data["add_songs"]["playlist_dict"] = {
-    str(i): playlist_name for i, playlist_name in enumerate(get_playlists())
-  }
+  context.chat_data["add_songs"]["playlist_dict"] = get_playlist_dict()
 
   await update.message.reply_text(
-    "Which playlist should these songs be added to?",
+    text="Which playlist should these songs be added to?",
     reply_markup=InlineKeyboardMarkup(
       [[InlineKeyboardButton("Create new playlist", callback_data="-1")]] + [
         [InlineKeyboardButton(playlist_name, callback_data=str(i))]
@@ -50,6 +48,7 @@ async def urls(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def playlist(update: Update, context: ContextTypes.DEFAULT_TYPE):
   await update.callback_query.answer()
+  await update.callback_query.edit_message_reply_markup(None)
 
   playlist_dict = context.chat_data["add_songs"]["playlist_dict"]
   if update.callback_query.data in playlist_dict:
@@ -118,7 +117,6 @@ async def confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
   ydl_opts = {
     "format": "bestaudio",
     "concurrent_fragment_downloads": cpu_count(),
-    # "paths": { "home": f"music/{playlist_name}" },
     "paths": { "home": "music/all_songs" },
     "noplaylist": True,
     "outtmpl": "%(uploader)s - %(title)s [%(id)s].%(ext)s",
@@ -163,9 +161,7 @@ def add_handlers(application: Application):
       AddSongsConversationState.URLS: [
         MessageHandler(filters=text_message_filter, callback=urls),
       ],
-      AddSongsConversationState.PLAYLIST: [
-        CallbackQueryHandler(callback=playlist),
-      ],
+      AddSongsConversationState.PLAYLIST: [CallbackQueryHandler(callback=playlist)],
       AddSongsConversationState.NEW_PLAYLIST: [
         MessageHandler(filters=text_message_filter, callback=new_playlist),
       ],

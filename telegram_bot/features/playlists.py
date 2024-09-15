@@ -5,6 +5,9 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 def get_playlists():
   return [entry.name for entry in os.scandir("music/playlists") if entry.is_dir()]
 
+def get_playlist_dict():
+  return {str(i): playlist_name for i, playlist_name in enumerate(get_playlists())}
+
 def get_formatted_playlist_list():
   playlists = get_playlists()
   if playlists:
