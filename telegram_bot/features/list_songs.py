@@ -1,6 +1,3 @@
-# TODO: list songs, sorted by date of addition
-# Allow user to specify playlist by ID or name
-
 import os
 from enum import Enum
 from pathlib import Path

@@ -1,17 +1,14 @@
-import os
 import logging
 from enum import Enum
-from multiprocessing import cpu_count
-from pathlib import Path
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, ConversationHandler, MessageHandler
 from yt_dlp import YoutubeDL
 
 from .playlists import get_playlist_dict, get_playlists
-from .utility import text_message_filter, download_audio, validate_playlist_name
+from .utility import get_yt_playlist_info, text_message_filter, download_audio, validate_playlist_name
 
-AddSongsConversationState = Enum("AddSongsConversationState", [
-  "URLS",
+AddPlaylistConversationState = Enum("AddPlaylistConversationState", [
+  "URL",
   "PLAYLIST",
   "NEW_PLAYLIST",
   "CONFIRM",
@@ -22,54 +19,80 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
   context.chat_data["in_conversation"] = True
   
-  context.chat_data["add_songs"] = {}
+  context.chat_data["add_playlist"] = {}
 
   await update.message.reply_text(
-    "Enter a newline-separated list of URLs to download from. "
+    "Enter the URL of the playlist to download. "
     "Send /cancel at any time to cancel."
   )
-  return AddSongsConversationState.URLS
+  return AddPlaylistConversationState.URL
 
-async def urls(update: Update, context: ContextTypes.DEFAULT_TYPE):
-  context.chat_data["add_songs"]["urls"] = update.message.text.split("\n")
+async def url(update: Update, context: ContextTypes.DEFAULT_TYPE):
+  yt_playlist_url = update.message.text
+  context.chat_data["add_playlist"]["playlist_url"] = yt_playlist_url
 
-  context.chat_data["add_songs"]["playlist_dict"] = get_playlist_dict()
+  fetching_info_msg = await update.message.reply_text(
+    "Fetching YouTube playlist info. This may take several minutes, "
+    "or up to an hour for playlists with several hundred songs."
+  )
+
+  try:
+    # TODO: run get_yt_playlist info asynchronously so user can /cancel while waiting
+    # And find some way to log fetching progress (e.g. "video m of n")
+    yt_playlist_info = get_yt_playlist_info(yt_playlist_url)
+    context.chat_data["add_playlist"]["urls"] = [
+      video["webpage_url"] for video in yt_playlist_info["entries"]
+    ]
+    context.chat_data["add_playlist"]["song_list"] = "\n".join(
+      f"{i+1}. {video['title']}\nURL: {video['webpage_url']}"
+      for i, video in enumerate(yt_playlist_info["entries"])
+    )
+    await fetching_info_msg.edit_text("Successfully fetched YouTube playlist info.")
+  except Exception as ex:
+    logging.error(f"Error while fetching info for YouTube playlist {yt_playlist_url}: {ex}")
+    await context.bot.send_message(
+      chat_id=update.callback_query.message.chat.id,
+      text="Error occurred while fetching YouTube playlist info. Send another playlist URL to try again.",
+    )
+    return AddPlaylistConversationState.URL
+
+  context.chat_data["add_playlist"]["playlist_dict"] = get_playlist_dict()
 
   await update.message.reply_text(
     text="Which playlist should these songs be added to?",
     reply_markup=InlineKeyboardMarkup(
       [[InlineKeyboardButton("Create new playlist", callback_data="-1")]] + [
         [InlineKeyboardButton(playlist_name, callback_data=str(i))]
-        for i, playlist_name in context.chat_data["add_songs"]["playlist_dict"].items()
+        for i, playlist_name in context.chat_data["add_playlist"]["playlist_dict"].items()
       ],
     ),
   )
 
-  return AddSongsConversationState.PLAYLIST
+  return AddPlaylistConversationState.PLAYLIST  
 
 async def playlist(update: Update, context: ContextTypes.DEFAULT_TYPE):
   await update.callback_query.answer()
   await update.callback_query.edit_message_reply_markup(None)
 
-  playlist_dict = context.chat_data["add_songs"]["playlist_dict"]
+  playlist_dict = context.chat_data["add_playlist"]["playlist_dict"]
   if update.callback_query.data in playlist_dict:
     playlist_name = playlist_dict[update.callback_query.data]
-    context.chat_data["add_songs"]["playlist"] = playlist_name
+    context.chat_data["add_playlist"]["playlist"] = playlist_name
    
     await context.bot.send_message(
       chat_id=update.callback_query.message.chat.id,
-      text=f"The songs at the following URLs will be added to playlist '{playlist_name}':\n" + \
-          "\n".join(context.chat_data["add_songs"]["urls"]) + \
-          "\n\nTo confirm, send /confirm. To cancel, send /cancel.",
+      text=f"The following songs will be added to playlist '{playlist_name}':\n" + \
+           context.chat_data["add_playlist"]["song_list"] + \
+           "\n\nTo confirm, send /confirm. To cancel, send /cancel.",
       disable_web_page_preview=True,
     )
-    return AddSongsConversationState.CONFIRM
+    return AddPlaylistConversationState.CONFIRM
   
   await context.bot.send_message(
     chat_id=update.callback_query.message.chat.id,
     text="What should your new playlist be called?",
   )
-  return AddSongsConversationState.NEW_PLAYLIST
+  return AddPlaylistConversationState.NEW_PLAYLIST
 
 async def new_playlist(update: Update, context: ContextTypes.DEFAULT_TYPE):
   playlist_name = update.message.text
@@ -78,30 +101,29 @@ async def new_playlist(update: Update, context: ContextTypes.DEFAULT_TYPE):
     validate_playlist_name(playlist_name)
   except:
     await update.message.reply_text("Invalid playlist name. Please choose another.")
-    return AddSongsConversationState.NEW_PLAYLIST
+    return AddPlaylistConversationState.NEW_PLAYLIST
 
   if playlist_name in get_playlists():
     await update.message.reply_text("Playlist already exists. Please enter another name.")
-    return AddSongsConversationState.NEW_PLAYLIST
+    return AddPlaylistConversationState.NEW_PLAYLIST
   
-  context.chat_data["add_songs"]["playlist"] = playlist_name
+  context.chat_data["add_playlist"]["playlist"] = playlist_name
 
   await update.message.reply_text(
-    text=f"The songs at the following URLs will be added to playlist '{playlist_name}':\n" + \
-         "\n".join(context.chat_data["add_songs"]["urls"]) + \
-         "\n\nTo confirm, send /confirm. To cancel, send /cancel.",
+    text=f"The following songs will be added to playlist '{playlist_name}':\n" + \
+          context.chat_data["add_playlist"]["song_list"] + \
+          "\n\nTo confirm, send /confirm. To cancel, send /cancel.",
     disable_web_page_preview=True,
   )
-  return AddSongsConversationState.CONFIRM
+  return AddPlaylistConversationState.CONFIRM
 
 async def confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
-  # TODO: handle case where song is already present in playlist
   context.chat_data["in_conversation"] = False
 
   download_status_message = await update.message.reply_text("Preparing to download...")
 
-  playlist_name = context.chat_data["add_songs"]["playlist"]
-  song_urls = context.chat_data["add_songs"]["urls"]
+  playlist_name = context.chat_data["add_playlist"]["playlist"]
+  song_urls = context.chat_data["add_playlist"]["urls"]
   
   num_successes = num_failures = 0
   for i, song_url in enumerate(song_urls):
@@ -128,23 +150,22 @@ async def confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
   return ConversationHandler.END
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
-  await update.message.reply_text("Song addition cancelled.")
+  await update.message.reply_text("Playlist addition cancelled.")
   context.chat_data["in_conversation"] = False
   return ConversationHandler.END
 
 def add_handlers(application: Application):
   application.add_handler(ConversationHandler(
-    entry_points=[CommandHandler("add_songs", start)],
+    entry_points=[CommandHandler("add_playlist", start)],
     states={
-      AddSongsConversationState.URLS: [
-        MessageHandler(filters=text_message_filter, callback=urls),
+      AddPlaylistConversationState.URL: [
+        MessageHandler(filters=text_message_filter, callback=url),
       ],
-      AddSongsConversationState.PLAYLIST: [CallbackQueryHandler(callback=playlist)],
-      AddSongsConversationState.NEW_PLAYLIST: [
+      AddPlaylistConversationState.PLAYLIST: [CallbackQueryHandler(callback=playlist)],
+      AddPlaylistConversationState.NEW_PLAYLIST: [
         MessageHandler(filters=text_message_filter, callback=new_playlist),
       ],
-      AddSongsConversationState.CONFIRM: [CommandHandler("confirm", confirm)],
+      AddPlaylistConversationState.CONFIRM: [CommandHandler("confirm", confirm)],
     },
     fallbacks=[CommandHandler("cancel", cancel)],
   ))
-
