@@ -51,7 +51,7 @@ async def url(update: Update, context: ContextTypes.DEFAULT_TYPE):
   except Exception as ex:
     logging.error(f"Error while fetching info for YouTube playlist {yt_playlist_url}: {ex}")
     await context.bot.send_message(
-      chat_id=update.callback_query.message.chat.id,
+      chat_id=update.message.chat_id,
       text="Error occurred while fetching YouTube playlist info. Send another playlist URL to try again.",
     )
     return AddPlaylistConversationState.URL
