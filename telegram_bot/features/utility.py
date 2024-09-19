@@ -1,3 +1,4 @@
+import time
 import os
 import yt_dlp
 from pathlib import Path
@@ -25,7 +26,9 @@ def download_audio(url, playlist_name):
 
     filename = os.path.basename(progress_info["info_dict"]["filename"])
     audio_path_relative_to_symlink = f"../../all_songs/{filename}"
-    symlink_path = f"music/playlists/{playlist_name}/{filename}"
+    # Prepend Unix epoch to symlink name for playlist sorting
+    # (most music players can't sort by last modification time)
+    symlink_path = f"music/playlists/{playlist_name}/{int(time.time())} {filename}"
 
     # FIXME: handle case where playlist already contains song
     # 'File exists' error is thrown when symlinking.
@@ -33,20 +36,14 @@ def download_audio(url, playlist_name):
 
     # Set modification time so playlist is in correct order when sorted by it
     # Most music players can't sort by last modification time, but whatever
-    (Path(playlist_path) / filename).touch()
     Path(symlink_path).touch()
-  
+
   ydl_opts = {
     "format": "m4a",
     "concurrent_fragment_downloads": cpu_count(),
     "paths": { "home": "music/all_songs" },
     "noplaylist": True,
     "outtmpl": "%(uploader)s - %(title)s [%(id)s].%(ext)s",
-    'postprocessor_args': {
-      # Set track number so that playlist can be sorted in right order
-      'default': ['-metadata', f'track={len(os.listdir(playlist_path)) + 1}'],
-      'sponskrub': [],
-    },
     'postprocessors': [{
       'add_chapters': True,
       'add_infojson': 'if_exists',
