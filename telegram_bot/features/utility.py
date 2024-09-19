@@ -58,5 +58,5 @@ def download_audio(url, playlist_name):
       raise Exception("yt-dlp returned a non-zero exit code")
   
 def get_yt_playlist_info(yt_playlist_url):
-  with yt_dlp.YoutubeDL() as ydl:
+  with yt_dlp.YoutubeDL({"ignoreerrors": True}) as ydl:
     return ydl.extract_info(yt_playlist_url, download=False)
