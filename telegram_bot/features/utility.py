@@ -39,7 +39,7 @@ def download_audio(url, playlist_name):
     Path(symlink_path).touch()
 
   ydl_opts = {
-    "format": "m4a",
+    "format": "bestaudio",
     "concurrent_fragment_downloads": cpu_count(),
     "paths": { "home": "music/all_songs" },
     "noplaylist": True,
