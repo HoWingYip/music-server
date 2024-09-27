@@ -5,7 +5,7 @@ from telegram import constants, InlineKeyboardButton, InlineKeyboardMarkup, Upda
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, ConversationHandler, MessageHandler
 
 from .playlists import get_playlist_dict, get_playlists
-from .utility import get_yt_playlist_info, text_message_filter, download_audio, validate_playlist_name
+from .utility import get_yt_playlist_info, text_message_filter, download_audio, validate_playlist_name, send_possibly_long_text
 
 AddPlaylistConversationState = Enum("AddPlaylistConversationState", [
   "URL",
@@ -15,21 +15,13 @@ AddPlaylistConversationState = Enum("AddPlaylistConversationState", [
 ])
 
 async def send_confirmation_message(chat_id: int, context: ContextTypes.DEFAULT_TYPE):
-  message = f"The following songs will be added to playlist " + \
-            f"'{context.chat_data['add_playlist']['playlist']}':\n" + \
-            context.chat_data["add_playlist"]["song_list"] + \
-            "\n\nTo confirm, send /confirm. To cancel, send /cancel."
-  
-  if len(message) <= constants.MessageLimit.MAX_TEXT_LENGTH:
-    return await context.bot.send_message(chat_id=chat_id, text=message, disable_web_page_preview=True)
-  
-  return await context.bot.send_document(
+  return await send_possibly_long_text(
+    text=f"The following songs will be added to playlist " + \
+         f"'{context.chat_data['add_playlist']['playlist']}':\n" + \
+         context.chat_data["add_playlist"]["song_list"] + \
+         "\n\nTo confirm, send /confirm. To cancel, send /cancel.",
     chat_id=chat_id,
-    document=StringIO(message),
-    caption="Song list is too long to send as raw text.\n"
-            "The attachment contains the list of songs to be added to playlist "
-            f"{context.chat_data['add_playlist']['playlist']}.\n"
-            "To confirm, send /confirm. To cancel, send /cancel."
+    context=context,
   )
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):

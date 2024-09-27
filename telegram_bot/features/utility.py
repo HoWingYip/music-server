@@ -1,11 +1,25 @@
+from io import StringIO
 import time
 import os
+from telegram import constants
 import yt_dlp
 from pathlib import Path
 from multiprocessing import cpu_count
-from telegram.ext import filters
+from telegram.ext import ContextTypes, filters
 
 text_message_filter = filters.TEXT & ~filters.COMMAND
+
+async def send_possibly_long_text(text: str, chat_id: int, context: ContextTypes.DEFAULT_TYPE):
+  if len(text) <= constants.MessageLimit.MAX_TEXT_LENGTH:
+    return await context.bot.send_message(chat_id=chat_id, text=text)
+  
+  return await context.bot.send_document(
+    chat_id=chat_id,
+    document=StringIO(text),
+    caption="The output of the operation you attempted is too long to send as raw text. "
+            "It is therefore attached as a text file.\n"
+            "Note that the attached file may contain instructions to run other commands."
+  )
 
 def validate_playlist_name(playlist_name):
   # Prevent directory traversal

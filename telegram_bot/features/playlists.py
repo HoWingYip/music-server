@@ -11,7 +11,7 @@ def get_playlists():
 def get_playlist_dict():
   return {str(i): playlist_name for i, playlist_name in enumerate(get_playlists())}
 
-def get_playlist_contents(playlist_name: str, full_filename):
+def get_playlist_contents(playlist_name: str, full_filename: bool):
   playlists_root = Path("music/playlists").resolve()
   playlist_path = playlists_root / playlist_name
   assert playlist_path.resolve().parent == playlists_root, "Invalid playlist name"

@@ -1,9 +1,8 @@
-import os
 from enum import Enum
-from pathlib import Path
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, ConversationHandler
 
+from .utility import send_possibly_long_text
 from .playlists import get_playlist_contents, get_playlist_dict
 
 ListSongsConversationState = Enum("ListSongsConversationState", [
@@ -35,11 +34,11 @@ async def playlist(update: Update, context: ContextTypes.DEFAULT_TYPE):
   playlist_name = context.chat_data["list_songs"]["playlist_dict"][update.callback_query.data]
   sorted_song_list = get_playlist_contents(playlist_name, full_filename=False)
 
-  # FIXME: song list may exceed Telegram text message length limit
-  await context.bot.send_message(
-    chat_id=update.callback_query.message.chat.id,
+  await send_possibly_long_text(
     text=f"Songs in playlist '{playlist_name}' (most recently added last):\n" + \
          "\n".join(f"{i+1}. {filename}" for i, filename in enumerate(sorted_song_list)),
+    chat_id=update.callback_query.message.chat.id,
+    context=context,
   )
 
   return ConversationHandler.END
