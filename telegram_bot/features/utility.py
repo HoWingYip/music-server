@@ -8,13 +8,8 @@ from telegram.ext import filters
 text_message_filter = filters.TEXT & ~filters.COMMAND
 
 def validate_playlist_name(playlist_name):
-  # Prevent arbitrary directory traversal
-  assert "/" not in playlist_name
-
-  # Prevent traversal to parent dir by using ".." as playlist name
-  music_root = Path("music").resolve()
-  playlist_path = music_root / playlist_name
-  assert playlist_path.resolve().parent == music_root
+  # Prevent directory traversal
+  assert "/" not in playlist_name and playlist_name != "..", "Invalid playlist name"
 
 def download_audio(url, playlist_name):
   playlist_path = f"music/playlists/{playlist_name}"
@@ -44,12 +39,14 @@ def download_audio(url, playlist_name):
     "paths": { "home": "music/all_songs" },
     "noplaylist": True,
     "outtmpl": "%(uploader)s - %(title)s [%(id)s].%(ext)s",
-    'postprocessors': [{
-      'add_chapters': True,
-      'add_infojson': 'if_exists',
-      'add_metadata': True,
-      'key': 'FFmpegMetadata',
+    "postprocessors": [{
+      "add_chapters": True,
+      "add_infojson": "if_exists",
+      "add_metadata": True,
+      "key": "FFmpegMetadata",
     }],
+    "fragment_retries": 10,
+    "retries": 10,
     "progress_hooks": [symlink_after_download],
   }
 
