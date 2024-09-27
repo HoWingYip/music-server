@@ -16,7 +16,7 @@ AddPlaylistConversationState = Enum("AddPlaylistConversationState", [
 
 async def send_confirmation_message(chat_id: int, context: ContextTypes.DEFAULT_TYPE):
   message = f"The following songs will be added to playlist " + \
-            f"{context.chat_data['add_playlist']['playlist']}:\n" + \
+            f"'{context.chat_data['add_playlist']['playlist']}':\n" + \
             context.chat_data["add_playlist"]["song_list"] + \
             "\n\nTo confirm, send /confirm. To cancel, send /cancel."
   

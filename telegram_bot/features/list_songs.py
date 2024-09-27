@@ -4,7 +4,7 @@ from pathlib import Path
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, ConversationHandler
 
-from .playlists import get_playlist_dict
+from .playlists import get_playlist_contents, get_playlist_dict
 
 ListSongsConversationState = Enum("ListSongsConversationState", [
   "PLAYLIST",
@@ -33,11 +33,9 @@ async def playlist(update: Update, context: ContextTypes.DEFAULT_TYPE):
   await update.callback_query.edit_message_reply_markup(None)
 
   playlist_name = context.chat_data["list_songs"]["playlist_dict"][update.callback_query.data]
-  sorted_song_list = [path.stem for path in sorted(
-    Path(f"music/playlists/{playlist_name}").iterdir(),
-    key=os.path.getmtime,
-  )]
+  sorted_song_list = get_playlist_contents(playlist_name, full_filename=False)
 
+  # FIXME: song list may exceed Telegram text message length limit
   await context.bot.send_message(
     chat_id=update.callback_query.message.chat.id,
     text=f"Songs in playlist '{playlist_name}' (most recently added last):\n" + \
