@@ -4,7 +4,7 @@ This is a tool for downloading music and syncing it across multiple devices. It 
 
 
 ## Contents
-- [In short](#in-short)
+- [Usage overview](#usage-overview)
 - [Configuration](#configuration)
   - [SSH server](#ssh-server)
   - [SSH tunnel](#ssh-tunnel)
@@ -23,12 +23,10 @@ This is a tool for downloading music and syncing it across multiple devices. It 
 
 ## Configuration
 
-First ensure Docker is installed. Then configure settings by setting environment variables in the following files:
+Configure settings by setting environment variables in the following files:
 - `server/.env.server` for SSH server
 - `tunnel/.env.tunnel` for SSH tunnel
 - `telegram_bot/.env.bot` for Telegram bot
-
-Finally, in the project root directory, run `docker compose up --build`.
 
 ### SSH server
 
@@ -40,7 +38,7 @@ PUID=1000
 PGID=1000
 
 # Server timezone
-TZ=Etc/UTC+0
+TZ=Etc/UTC+8
 
 # Folder containing SSH public keys to accept
 PUBLIC_KEY_DIR=/config/pub_keys
@@ -60,7 +58,7 @@ LOG_STDOUT=true
 
 ### SSH tunnel
 
-The author tunnels SSH traffic over an ngrok TCP tunnel because she's poor. Should you choose to do the same, you'll need an ngrok account with a valid payment method added. (ngrok TCP tunnels are free-of-charge as of 21 Sep 2024, but they require a payment method for abuse prevention.)
+The author tunnels SSH traffic over an ngrok TCP tunnel because she's poor. Should you choose to do the same, you'll need an ngrok account with a valid payment method added. (ngrok TCP tunnels are free-of-charge as of 21 Sep 2024, but require a payment method for abuse prevention.)
 
 Setup is simple. In `tunnel/.env.tunnel`, set `NGROK_AUTHTOKEN=your_ngrok_authtoken`.
 
@@ -77,6 +75,7 @@ BOT_TOKEN=your_bot_token # Telegram bot token
 ALLOWED_USER_IDS=1,2,3 # comma-separated list of Telegram user IDs to allow
 ```
 
+
 ## Using the Telegram bot
 
-
+The bot is self-documenting. Start it and send `/help` for usage instructions.
