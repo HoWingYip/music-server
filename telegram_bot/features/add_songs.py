@@ -1,13 +1,10 @@
-# FIXME: added song lists may be too long to send as raw text.
-# Use .utility.send_possibly_long_message instead.
-
 import logging
 from enum import Enum
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, ConversationHandler, MessageHandler
 
 from .playlists import get_playlist_dict, get_playlists
-from .utility import text_message_filter, download_audio, valid_playlist_name
+from .utility import send_possibly_long_text, text_message_filter, download_audio, valid_playlist_name
 
 AddSongsConversationState = Enum("AddSongsConversationState", [
   "URLS",
@@ -15,6 +12,16 @@ AddSongsConversationState = Enum("AddSongsConversationState", [
   "NEW_PLAYLIST",
   "CONFIRM",
 ])
+
+async def send_confirmation_message(chat_id: int, context: ContextTypes.DEFAULT_TYPE):
+  return await send_possibly_long_text(
+    text="The songs at the following URLs will be added to playlist "
+         f"'{context.chat_data['add_songs']['playlist']}':\n" + \
+         "\n".join(context.chat_data["add_songs"]["urls"]) + \
+         "\n\nTo confirm, send /confirm. To cancel, send /cancel.",
+    chat_id=chat_id,
+    context=context, 
+  )
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
   if context.chat_data.get("in_conversation"):
@@ -55,13 +62,7 @@ async def playlist(update: Update, context: ContextTypes.DEFAULT_TYPE):
     playlist_name = playlist_dict[update.callback_query.data]
     context.chat_data["add_songs"]["playlist"] = playlist_name
    
-    await context.bot.send_message(
-      chat_id=update.callback_query.message.chat.id,
-      text=f"The songs at the following URLs will be added to playlist '{playlist_name}':\n" + \
-          "\n".join(context.chat_data["add_songs"]["urls"]) + \
-          "\n\nTo confirm, send /confirm. To cancel, send /cancel.",
-      disable_web_page_preview=True,
-    )
+    await send_confirmation_message(update.callback_query.message.chat.id, context)
     return AddSongsConversationState.CONFIRM
   
   await context.bot.send_message(
@@ -83,12 +84,7 @@ async def new_playlist(update: Update, context: ContextTypes.DEFAULT_TYPE):
   
   context.chat_data["add_songs"]["playlist"] = playlist_name
 
-  await update.message.reply_text(
-    text=f"The songs at the following URLs will be added to playlist '{playlist_name}':\n" + \
-         "\n".join(context.chat_data["add_songs"]["urls"]) + \
-         "\n\nTo confirm, send /confirm. To cancel, send /cancel.",
-    disable_web_page_preview=True,
-  )
+  await send_confirmation_message(update.message.chat_id, context)
   return AddSongsConversationState.CONFIRM
 
 async def confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):

@@ -1,7 +1,6 @@
-from io import StringIO
 import logging
 from enum import Enum
-from telegram import constants, InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, ConversationHandler, MessageHandler
 
 from .playlists import get_playlist_dict, get_playlists
@@ -14,8 +13,6 @@ AddPlaylistConversationState = Enum("AddPlaylistConversationState", [
   "CONFIRM",
 ])
 
-# TODO: refactor for use in add_songs.py
-# Take additional args for playlist and song list
 async def send_confirmation_message(chat_id: int, context: ContextTypes.DEFAULT_TYPE):
   return await send_possibly_long_text(
     text=f"The following songs will be added to playlist " + \
