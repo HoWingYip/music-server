@@ -1,19 +1,19 @@
 import logging
 import os
 from telegram import Update
-from telegram.ext import Application, BaseHandler, CallbackContext
+from telegram.ext import Application, ApplicationHandlerStop, BaseHandler, CallbackContext
 
 class AuthHandler(BaseHandler):
-  # TODO: test with someone else's user account
   def __init__(self):
     super().__init__(self.callback)
+    self.allowed_user_ids = set(int(id) for id in os.environ["ALLOWED_USER_IDS"].split(","))
   
   async def callback(self, update: Update, context: CallbackContext):
-    logging.info(f"Attempted unauthorized access.\nupdate = {update}\ncontext = {context}")
+    logging.info(f"Attempted unauthorized access. Attempt info: {update}")
+    raise ApplicationHandlerStop # Stop other handlers from running
     
   def check_update(self, update: Update):
-    allowed_user_ids = [int(id) for id in os.environ["ALLOWED_USER_IDS"].split(",")]
-    return update.effective_user.id not in allowed_user_ids
+    return update.effective_user.id not in self.allowed_user_ids
 
 def add_handlers(application: Application):
-  application.add_handler(AuthHandler())
+  application.add_handler(AuthHandler(), group=-1) # max priority
