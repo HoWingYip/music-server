@@ -3,8 +3,7 @@ from pathlib import Path
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, ConversationHandler, MessageHandler
 
-from .playlists import get_playlist_contents, get_playlist_dict
-from .utility import text_message_filter
+from .utility import get_playlist_contents, get_playlist_dict, text_message_filter
 
 DeleteSongsConversationState = Enum("DeleteSongsConversationState", [
   "PLAYLIST",

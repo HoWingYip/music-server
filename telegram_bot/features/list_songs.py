@@ -2,8 +2,7 @@ from enum import Enum
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, ConversationHandler
 
-from .utility import send_possibly_long_text
-from .playlists import get_playlist_contents, get_playlist_dict
+from .utility import send_possibly_long_text, get_playlist_contents, get_playlist_dict
 
 ListSongsConversationState = Enum("ListSongsConversationState", [
   "PLAYLIST",

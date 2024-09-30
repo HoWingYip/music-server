@@ -9,9 +9,46 @@ from telegram.ext import ContextTypes, filters
 
 text_message_filter = filters.TEXT & ~filters.COMMAND
 
-async def send_possibly_long_text(text: str, chat_id: int, context: ContextTypes.DEFAULT_TYPE):
+def valid_playlist_name(playlist_name):
+  # Prevent directory traversal
+  return "/" not in playlist_name and playlist_name != ".."
+
+def get_playlists():
+  return [entry.name for entry in os.scandir("music/playlists") if entry.is_dir()]
+
+def get_playlist_dict():
+  return {str(i): playlist_name for i, playlist_name in enumerate(get_playlists())}
+
+def get_playlist_contents(playlist_name: str, full_filename: bool):
+  playlists_root = Path("music/playlists").resolve()
+  playlist_path = playlists_root / playlist_name
+  assert playlist_path.resolve().parent == playlists_root, "Invalid playlist name"
+
+  return [
+    entry.name if full_filename else " ".join(entry.stem.split(" ")[1:])
+    for entry in sorted(playlist_path.iterdir(), key=os.path.getmtime)
+    if entry.is_file()
+  ]
+
+def get_formatted_playlist_list():
+  playlists = get_playlists()
+  if playlists:
+    return "\n".join(f"{i+1}. {playlist}" for i, playlist in enumerate(playlists))
+  else:
+    return "No playlists."
+
+async def send_possibly_long_text(
+    text: str,
+    chat_id: int,
+    context: ContextTypes.DEFAULT_TYPE,
+    disable_web_page_preview: bool = True,
+):
   if len(text) <= constants.MessageLimit.MAX_TEXT_LENGTH:
-    return await context.bot.send_message(chat_id=chat_id, text=text)
+    return await context.bot.send_message(
+      chat_id=chat_id,
+      text=text,
+      disable_web_page_preview=disable_web_page_preview,
+    )
   
   return await context.bot.send_document(
     chat_id=chat_id,
@@ -20,10 +57,6 @@ async def send_possibly_long_text(text: str, chat_id: int, context: ContextTypes
             "It is therefore attached as a text file.\n"
             "Note that the attached file may contain instructions to run additional commands.",
   )
-
-def valid_playlist_name(playlist_name):
-  # Prevent directory traversal
-  return "/" not in playlist_name and playlist_name != ".."
 
 def download_audio(url, playlist_name):
   playlist_path = f"music/playlists/{playlist_name}"

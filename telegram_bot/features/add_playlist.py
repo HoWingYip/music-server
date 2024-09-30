@@ -3,8 +3,7 @@ from enum import Enum
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, ConversationHandler, MessageHandler
 
-from .playlists import get_playlist_dict, get_playlists
-from .utility import get_yt_playlist_info, text_message_filter, download_audio, valid_playlist_name, send_possibly_long_text
+from .utility import get_playlist_dict, get_playlists, get_yt_playlist_info, text_message_filter, download_audio, valid_playlist_name, send_possibly_long_text
 
 AddPlaylistConversationState = Enum("AddPlaylistConversationState", [
   "URL",
