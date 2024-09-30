@@ -18,12 +18,12 @@ async def send_possibly_long_text(text: str, chat_id: int, context: ContextTypes
     document=StringIO(text),
     caption="The output of the operation you attempted is too long to send as raw text. "
             "It is therefore attached as a text file.\n"
-            "Note that the attached file may contain instructions to run other commands."
+            "Note that the attached file may contain instructions to run additional commands.",
   )
 
-def validate_playlist_name(playlist_name):
+def valid_playlist_name(playlist_name):
   # Prevent directory traversal
-  assert "/" not in playlist_name and playlist_name != "..", "Invalid playlist name"
+  return "/" not in playlist_name and playlist_name != ".."
 
 def download_audio(url, playlist_name):
   playlist_path = f"music/playlists/{playlist_name}"

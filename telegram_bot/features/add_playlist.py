@@ -5,7 +5,7 @@ from telegram import constants, InlineKeyboardButton, InlineKeyboardMarkup, Upda
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, ConversationHandler, MessageHandler
 
 from .playlists import get_playlist_dict, get_playlists
-from .utility import get_yt_playlist_info, text_message_filter, download_audio, validate_playlist_name, send_possibly_long_text
+from .utility import get_yt_playlist_info, text_message_filter, download_audio, valid_playlist_name, send_possibly_long_text
 
 AddPlaylistConversationState = Enum("AddPlaylistConversationState", [
   "URL",
@@ -14,6 +14,8 @@ AddPlaylistConversationState = Enum("AddPlaylistConversationState", [
   "CONFIRM",
 ])
 
+# TODO: refactor for use in add_songs.py
+# Take additional args for playlist and song list
 async def send_confirmation_message(chat_id: int, context: ContextTypes.DEFAULT_TYPE):
   return await send_possibly_long_text(
     text=f"The following songs will be added to playlist " + \
@@ -103,9 +105,7 @@ async def playlist(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def new_playlist(update: Update, context: ContextTypes.DEFAULT_TYPE):
   playlist_name = update.message.text
 
-  try:
-    validate_playlist_name(playlist_name)
-  except:
+  if not valid_playlist_name(playlist_name):
     await update.message.reply_text("Invalid playlist name. Please choose another.")
     return AddPlaylistConversationState.NEW_PLAYLIST
 

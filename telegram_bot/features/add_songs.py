@@ -1,10 +1,13 @@
+# FIXME: added song lists may be too long to send as raw text.
+# Use .utility.send_possibly_long_message instead.
+
 import logging
 from enum import Enum
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, ConversationHandler, MessageHandler
 
 from .playlists import get_playlist_dict, get_playlists
-from .utility import text_message_filter, download_audio, validate_playlist_name
+from .utility import text_message_filter, download_audio, valid_playlist_name
 
 AddSongsConversationState = Enum("AddSongsConversationState", [
   "URLS",
@@ -70,9 +73,7 @@ async def playlist(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def new_playlist(update: Update, context: ContextTypes.DEFAULT_TYPE):
   playlist_name = update.message.text
 
-  try:
-    validate_playlist_name(playlist_name)
-  except:
+  if not valid_playlist_name(playlist_name):
     await update.message.reply_text("Invalid playlist name. Please choose another.")
     return AddSongsConversationState.NEW_PLAYLIST
 
