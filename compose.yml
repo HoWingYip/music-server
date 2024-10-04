@@ -12,6 +12,12 @@ services:
       - ./music:/music
     ports:
       - ${SSH_PORT}:2222
+    healthcheck:
+      test: nc -zv 127.0.0.1 2222
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
 
   ssh-tunnel:
@@ -35,7 +41,8 @@ services:
     volumes:
       - ./music:/music
     depends_on:
-      # TODO: add health check for SSH server container as well
+      openssh-server:
+        condition: service_healthy
       ssh-tunnel:
         condition: service_healthy
     restart: unless-stopped
