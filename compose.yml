@@ -1,14 +1,11 @@
 services:
   openssh-server:
-    image: linuxserver/openssh-server:latest
+    build: server
     container_name: music-server
     hostname: music-server
     env_file: server/.env.server
     volumes:
       - ./server/config:/config
-      # TODO: inherit from linuxserver/openssh-server Dockerfile
-      # and add `apk install rsync` as a build step
-      - ./server/custom-cont-init.d:/custom-cont-init.d
       - ./music:/music
     ports:
       - ${SSH_PORT}:2222
@@ -16,8 +13,8 @@ services:
       test: nc -zv 127.0.0.1 2222
       interval: 5s
       timeout: 5s
-      retries: 5
-      start_period: 10s
+      retries: 10
+      start_period: 30s
     restart: unless-stopped
 
   ssh-tunnel:
@@ -30,8 +27,8 @@ services:
       test: "[ $(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].config.addr') == 'localhost:2222' ]"
       interval: 5s
       timeout: 5s
-      retries: 5
-      start_period: 10s
+      retries: 10
+      start_period: 30s
 
   telegram-bot:
     build: telegram_bot
