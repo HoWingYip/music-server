@@ -5,6 +5,8 @@ from telegram.ext import Application, CallbackQueryHandler, CommandHandler, Cont
 
 from .utility import get_playlist_dict, get_playlists, get_yt_playlist_info, text_message_filter, download_audio, valid_playlist_name, send_possibly_long_text
 
+help_str = "/add_playlist - Add online playlist contents to local playlist"
+
 AddPlaylistConversationState = Enum("AddPlaylistConversationState", [
   "URL",
   "PLAYLIST",

@@ -5,6 +5,8 @@ from telegram.ext import Application, CallbackQueryHandler, CommandHandler, Cont
 
 from .utility import get_playlist_dict, get_playlists, send_possibly_long_text, text_message_filter, download_audio, valid_playlist_name
 
+help_str = "/add_songs - Add individual songs to local playlist"
+
 AddSongsConversationState = Enum("AddSongsConversationState", [
   "URLS",
   "PLAYLIST",

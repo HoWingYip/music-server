@@ -5,6 +5,8 @@ from telegram.ext import Application, CallbackQueryHandler, CommandHandler, Cont
 
 from .utility import get_playlist_contents, get_playlist_dict, text_message_filter
 
+help_str = "/delete_songs - Delete individual songs from local playlist"
+
 DeleteSongsConversationState = Enum("DeleteSongsConversationState", [
   "PLAYLIST",
   "IDS",

@@ -4,6 +4,8 @@ from urllib.parse import urlparse
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
+help_str = "/server - View SSH server address and port"
+
 async def get_server_addr(update: Update, context: ContextTypes.DEFAULT_TYPE):
   try:
     tunnels = requests.get("http://localhost:4040/api/tunnels").json()["tunnels"]

@@ -9,7 +9,7 @@ from telegram.ext import ContextTypes, filters
 
 text_message_filter = filters.TEXT & ~filters.COMMAND
 
-def valid_playlist_name(playlist_name):
+def valid_playlist_name(playlist_name: str):
   # Prevent directory traversal
   return "/" not in playlist_name and playlist_name != ".."
 

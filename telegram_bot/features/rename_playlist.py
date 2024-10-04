@@ -1,3 +1,4 @@
+import logging
 import os
 from enum import Enum
 from pathlib import Path
@@ -5,6 +6,8 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, ConversationHandler, MessageHandler
 
 from .utility import text_message_filter, get_playlists, get_playlist_dict, valid_playlist_name
+
+help_str = "/rename_playlist - Rename local playlist"
 
 RenamePlaylistConversationState = Enum("RenamePlaylistConversationState", [
   "PLAYLIST",
@@ -84,7 +87,8 @@ async def confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
       playlists_path / context.chat_data["rename_playlist"]["new_name"],
     )
     await update.message.reply_text("Playlist successfully renamed.")
-  except:
+  except Exception as ex:
+    logging.error(f"Error occurred while renaming playlist: {ex}")
     await update.message.reply_text("An error occurred.")
 
   return ConversationHandler.END
