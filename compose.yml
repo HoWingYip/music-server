@@ -35,6 +35,7 @@ services:
     volumes:
       - ./music:/music
     depends_on:
+      # TODO: add health check for SSH server container as well
       ssh-tunnel:
         condition: service_healthy
     restart: unless-stopped
