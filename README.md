@@ -23,7 +23,9 @@ This is a tool for downloading music and syncing it across multiple devices. It 
 
 ## Configuration
 
-Configure settings by setting environment variables in the following files:
+To set the host port on which the SSH server is exposed, set `SSH_PORT` in the file `.env`. Example: `SSH_PORT=2002`. Note that `.env` does not define any environment variables; Docker Compose only reads from it to interpolate variables in `compose.yml`.
+
+Configure other settings by setting environment variables in the following files:
 - `server/.env.server` for SSH server
 - `tunnel/.env.tunnel` for SSH tunnel
 - `telegram_bot/.env.bot` for Telegram bot
