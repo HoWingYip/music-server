@@ -30,7 +30,7 @@ Configure settings by setting environment variables in the following files:
 
 ### SSH server
 
-We use the [`linuxserver/openssh-server`](https://hub.docker.com/r/linuxserver/openssh-server) Docker image. Environment variables go in `server/.env.server`. Available settings are listed [here](https://hub.docker.com/r/linuxserver/openssh-server). Below is an example config:
+We inherit from the [`linuxserver/openssh-server`](https://hub.docker.com/r/linuxserver/openssh-server) Docker image. Environment variables go in `server/.env.server`. Available settings are listed [here](https://github.com/linuxserver/docker-openssh-server?tab=readme-ov-file#parameters). Below is an example config:
 
 ```bash
 # User ID and group ID of SSH user
@@ -58,13 +58,13 @@ LOG_STDOUT=true
 
 ### SSH tunnel
 
-The author tunnels SSH traffic over an ngrok TCP tunnel because she's poor. Should you choose to do the same, you'll need an ngrok account with a valid payment method added. (ngrok TCP tunnels are free-of-charge as of 21 Sep 2024, but require a payment method for abuse prevention.)
+The author tunnels SSH traffic over an ngrok TCP tunnel because she's poor. Should you choose to do the same, you'll need an ngrok account with a valid payment method added. (At the time of writing, ngrok TCP tunnels are free-of-charge, but require a payment method for abuse prevention.)
 
 Setup is simple. In `tunnel/.env.tunnel`, set `NGROK_AUTHTOKEN=your_ngrok_authtoken`.
 
 If you're hosting your music on an internet-facing server, the SSH tunnel is not necessary. To disable it, comment out the following sections in `compose.yml`:
 - `services.ssh-tunnel`
-- `services.telegram-bot.depends_on`
+- `services.telegram-bot.depends_on.ssh-tunnel`
 
 ### Telegram bot
 
@@ -75,7 +75,22 @@ BOT_TOKEN=your_bot_token # Telegram bot token
 ALLOWED_USER_IDS=1,2,3 # comma-separated list of Telegram user IDs to allow
 ```
 
+You can find your user ID by texting [@userinfobot](https://t.me/userinfobot) on Telegram. (The author is not affiliated with this third-party service.)
+
 
 ## Using the Telegram bot
 
-The bot is self-documenting. Start it and send `/help` for usage instructions.
+The Telegram bot accepts the following commands:
+
+| Command | Action
+|-|-
+| `/add_playlist` | Add online playlist contents to local playlist
+| `/add_songs` | Add individual songs to local playlist
+| `/delete_playlist` | Delete local playlist
+| `/delete_songs` | Delete individual songs from local playlist
+| `/list_playlists` | List local playlists
+| `/list_songs` | List songs in local playlist
+| `/rename_playlist` | Rename local playlist
+| `/server` | View SSH server address and port
+| `/help` | Show manual
+

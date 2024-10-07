@@ -8,7 +8,7 @@ async def send_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     feature.help_str for feature in all_features_except_help
     if hasattr(feature, "help_str")
   ]
-  help_strings.append("/help - Show this message")
+  help_strings.append("/help - Show manual")
 
   await update.message.reply_text("\n".join(help_strings))
 
